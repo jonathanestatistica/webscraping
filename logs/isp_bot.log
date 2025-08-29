@@ -33,3 +33,7 @@
 2025-08-27 16:40:12,196 INFO Processed: 20250827T194009Z__1c34b6bd35__base_bicicleta.csv -> 20250827T194009Z__1c34b6bd35__base_bicicleta__normalized.csv
 2025-08-27 16:40:12,353 INFO Processed: 20250827T194010Z__44eeaac945__Base_DP_senasp.csv -> 20250827T194010Z__44eeaac945__Base_DP_senasp__normalized.csv
 2025-08-27 16:40:21,021 INFO Master updated with 193842 rows
+2025-08-29 19:18:20,558 - INFO - ==== Iniciando execução do bot ====
+2025-08-29 19:18:20,558 - INFO - Acessando página principal...
+2025-08-29 19:18:21,821 - INFO - Baixando arquivo: https://www.ispdados.rj.gov.br/Arquivos/BaseMunicipioMensal.csv
+2025-08-29 19:18:25,069 - INFO - Arquivo atualizado e salvo em /home/runner/work/webscraping/webscraping/data/BaseMunicipioMensal.csv
