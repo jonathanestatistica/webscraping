@@ -43,3 +43,9 @@
 2025-08-29 23:34:13,221 - INFO - Arquivo atualizado e salvo em /home/runner/work/webscraping/webscraping/data/BaseMunicipioMensal.csv
 2025-08-29 23:34:13,221 - INFO - Lendo CSV para envio ao Sheets...
 2025-08-29 23:34:13,238 - ERROR - Erro ao enviar para Google Sheets: 'utf-8' codec can't decode byte 0xe9 in position 6: unexpected end of data
+2025-08-29 23:39:46,439 - INFO - ==== Iniciando execução do bot ====
+2025-08-29 23:39:46,440 - INFO - Acessando página principal...
+2025-08-29 23:39:47,509 - INFO - Baixando arquivo: https://www.ispdados.rj.gov.br/Arquivos/BaseMunicipioMensal.csv
+2025-08-29 23:39:52,811 - INFO - Arquivo atualizado e salvo em /home/runner/work/webscraping/webscraping/data/BaseMunicipioMensal.csv
+2025-08-29 23:39:52,811 - INFO - Lendo CSV para envio ao Sheets...
+2025-08-29 23:39:52,827 - ERROR - Erro ao enviar para Google Sheets: 'utf-8' codec can't decode byte 0xe9 in position 6: unexpected end of data
