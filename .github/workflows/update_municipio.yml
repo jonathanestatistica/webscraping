@@ -1,0 +1,31 @@
+name: Atualizar BaseMunicipioMensal.csv
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # todo dia às 06h UTC (03h em Brasília)
+  workflow_dispatch:        # também pode rodar manualmente
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4
+
+      - name: Rodar script de download
+        run: python scripts/baixar_municipio.py
+
+      - name: Commit & Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git add data/BaseMunicipioMensal.csv
+          git commit -m "Atualização automática do CSV" || echo "Sem mudanças"
+          git push
