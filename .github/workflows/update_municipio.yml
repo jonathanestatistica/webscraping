@@ -20,7 +20,7 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Rodar script de download
-        run: python scripts/baixar_municipio.py
+        run: python scripts/iso_bot3.py
 
       - name: Commit & Push
         run: |
