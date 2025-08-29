@@ -62,7 +62,7 @@ def baixar_base_municipio():
 def enviar_para_google_sheets(csv_path: Path):
     try:
         logging.info("Lendo CSV para envio ao Sheets...")
-        df = pd.read_csv(csv_path, sep=';', encoding='utf-8')
+        df = pd.read_csv(csv_path, sep=';', encoding='latin1')
 
         print("🧪 Preview do DataFrame:")
         print(df.head())
