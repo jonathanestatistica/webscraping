@@ -10,14 +10,14 @@ from google.oauth2.service_account import Credentials
 BASE_URL = "https://www.ispdados.rj.gov.br/estatistica.html"
 data_dir = Path("data")
 logs_dir = Path("logs")
-json_keyfile = "calculo-p-valor-24be73e741dd.json"
-sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"
+json_keyfile = "calculo-p-valor-24be73e741dd.json"  # chave correta
+sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"  # planilha
 
-# === CRIA PASTAS SE NÃO EXISTIREM ===
+# === CRIA PASTAS ===
 data_dir.mkdir(exist_ok=True)
 logs_dir.mkdir(exist_ok=True)
 
-# === LOG ===
+# === LOGGING ===
 log_file = logs_dir / "isp_bot.log"
 logging.basicConfig(
     filename=log_file,
@@ -47,30 +47,20 @@ def baixar_base_municipio():
                 destino = data_dir / "BaseMunicipioMensal.csv"
                 destino.write_bytes(r.content)
 
-                logging.info(f"Arquivo atualizado e salvo em {destino.resolve()}")
-
-                # Enviar para Google Sheets
+                logging.info(f"Arquivo salvo em {destino.resolve()}")
                 enviar_para_google_sheets(destino)
                 return destino
 
-        raise RuntimeError("Não encontrei BaseMunicipioMensal.csv na página")
+        raise RuntimeError("CSV não encontrado na página.")
 
     except Exception as e:
-        logging.error(f"Erro ao baixar: {e}")
+        logging.error(f"Erro ao baixar CSV: {e}")
         raise
 
 def enviar_para_google_sheets(csv_path: Path):
     try:
         logging.info("Lendo CSV para envio ao Sheets...")
-        df = pd.read_csv(csv_path, sep=';', encoding='latin1')
-
-        print("🧪 Preview do DataFrame:")
-        print(df.head())
-        print(f"🧮 Total de linhas: {len(df)}")
-
-        if df.empty:
-            print("❌ CSV está vazio. Abortando envio.")
-            return
+        df = pd.read_csv(csv_path, sep=';', encoding='latin1')  # usa latin1 para evitar erro com acentos
 
         logging.info("Autenticando com Google Sheets...")
         creds = Credentials.from_service_account_file(
@@ -79,19 +69,19 @@ def enviar_para_google_sheets(csv_path: Path):
         )
         gc = gspread.authorize(creds)
         sh = gc.open_by_key(sheet_id)
+        worksheet = sh.sheet1
 
-        # Nome da aba
-        worksheet = sh.worksheet("Página1")  # ⬅️ Nome da aba precisa bater exatamente
-        print("📝 Limpando aba 'Página1'...")
+        logging.info("Limpando planilha...")
         worksheet.clear()
 
-        logging.info("Enviando dados para a planilha...")
+        logging.info("Enviando dados...")
         worksheet.update([df.columns.values.tolist()] + df.values.tolist())
-        print("✅ Planilha atualizada com sucesso.")
+
+        logging.info("Planilha atualizada com sucesso.")
 
     except Exception as e:
-        logging.error(f"Erro ao enviar para Google Sheets: {e}")
-        print(f"❌ Erro ao enviar para o Google Sheets: {e}")
+        logging.error(f"Erro ao enviar para o Google Sheets: {e}")
+        print(f"❌ Falha no envio para o Sheets: {e}")
 
 if __name__ == "__main__":
     baixar_base_municipio()
