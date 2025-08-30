@@ -2,7 +2,7 @@ name: Atualizar BaseMunicipioMensal.csv
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "0 6 * * *"  # Executa diariamente às 06h UTC (03h Brasília)
   workflow_dispatch:
 
 jobs:
@@ -14,17 +14,29 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Corrigir hora do sistema (evita erro de JWT)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ntpdate
+          sudo ntpdate time.nist.gov
+
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
       - name: Instalar dependências
-        run: pip install requests beautifulsoup4 pandas gspread google-auth
+        run: |
+          pip install requests beautifulsoup4 pandas gspread google-auth lxml
 
-      - name: Rodar script de download
+      - name: Criar arquivo de credenciais
         env:
           GCP_SHEETS_CREDENTIALS: ${{ secrets.GCP_SHEETS_CREDENTIALS }}
+        run: |
+          mkdir -p credenciais
+          echo "$GCP_SHEETS_CREDENTIALS" > credenciais/creds.json
+
+      - name: Rodar script de download e envio para Sheets
         run: python scripts/iso_bot3.py
 
       - name: Commit & Push
