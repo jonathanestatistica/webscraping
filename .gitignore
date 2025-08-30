@@ -1,2 +1,5 @@
+# Ignora qualquer JSON de credenciais
 credenciais/*.json
-*.json
+
+# Opcional: ignore arquivos secretos na raiz com nome específico
+calculo-p-valor-*.json
