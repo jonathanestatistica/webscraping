@@ -4,21 +4,19 @@ from bs4 import BeautifulSoup
 import logging
 import pandas as pd
 import gspread
-import io
 from google.oauth2.service_account import Credentials
+from io import StringIO
 
-# === CONFIGURAÇÃO ===
+# === CONFIG ===
 BASE_URL = "https://www.ispdados.rj.gov.br/estatistica.html"
 data_dir = Path("data")
 logs_dir = Path("logs")
-json_keyfile = "calculo-p-valor-3190f56f75a4.json"  # 🔑 chave atual
-sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"  # 🔗 ID da sua planilha
+json_keyfile = "calculo-p-valor-3190f56f75a4.json"  # Use o nome EXATO
+sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"
 
-# === CRIA PASTAS SE NÃO EXISTIREM ===
 data_dir.mkdir(exist_ok=True)
 logs_dir.mkdir(exist_ok=True)
 
-# === LOGGING ===
 log_file = logs_dir / "isp_bot.log"
 logging.basicConfig(
     filename=log_file,
@@ -27,6 +25,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logging.info("==== Iniciando execução do bot ====")
+
 
 def baixar_base_municipio():
     try:
@@ -47,11 +46,10 @@ def baixar_base_municipio():
 
                 destino = data_dir / "BaseMunicipioMensal.csv"
                 destino.write_bytes(r.content)
+                logging.info(f"Arquivo salvo em {destino.resolve()}")
 
-                logging.info(f"Arquivo atualizado e salvo em {destino.resolve()}")
-
-                # Envia para Google Sheets
-                enviar_para_google_sheets(destino)
+                # Atualiza planilha Google Sheets
+                enviar_para_google_sheets(r.content.decode('latin1'))  # <-- aqui
 
                 return destino
 
@@ -59,21 +57,16 @@ def baixar_base_municipio():
 
     except Exception as e:
         logging.error(f"Erro ao baixar: {e}")
-        print(f"❌ Falha ao baixar: {e}")
         raise
 
-def enviar_para_google_sheets(csv_path: Path):
+
+def enviar_para_google_sheets(csv_content):
     try:
         logging.info("Lendo CSV para envio ao Sheets...")
-        with open(csv_path, "rb") as f:
-            content = f.read()
-        df = pd.read_csv(io.StringIO(content.decode("latin1")), sep=';')
+        df = pd.read_csv(StringIO(csv_content), sep=';', encoding='latin1')
 
         logging.info("Autenticando com Google Sheets...")
-        creds = Credentials.from_service_account_file(
-            json_keyfile,
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        )
+        creds = Credentials.from_service_account_file(json_keyfile, scopes=["https://www.googleapis.com/auth/spreadsheets"])
         gc = gspread.authorize(creds)
         sh = gc.open_by_key(sheet_id)
         worksheet = sh.sheet1
@@ -82,13 +75,13 @@ def enviar_para_google_sheets(csv_path: Path):
         worksheet.clear()
 
         logging.info("Enviando dados...")
-        worksheet.update([df.columns.tolist()] + df.values.tolist())
-
-        logging.info("✅ Planilha atualizada com sucesso.")
+        worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+        logging.info("Planilha atualizada com sucesso.")
 
     except Exception as e:
         logging.error(f"Erro ao enviar para o Google Sheets: {e}")
         print(f"❌ Falha ao enviar para o Google Sheets: {e}")
+
 
 if __name__ == "__main__":
     baixar_base_municipio()
