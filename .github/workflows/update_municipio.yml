@@ -2,18 +2,17 @@ name: Atualizar BaseMunicipioMensal.csv
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # roda todo dia às 06h UTC (03h Brasília)
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # ✅ necessário para dar push
+      contents: write
+
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configurar Python
         uses: actions/setup-python@v4
@@ -21,9 +20,11 @@ jobs:
           python-version: "3.10"
 
       - name: Instalar dependências
-        run: pip install -r requirements.txt
+        run: pip install requests beautifulsoup4 pandas gspread google-auth
 
       - name: Rodar script de download
+        env:
+          GCP_SHEETS_CREDENTIALS: ${{ secrets.GCP_SHEETS_CREDENTIALS }}
         run: python scripts/iso_bot3.py
 
       - name: Commit & Push
