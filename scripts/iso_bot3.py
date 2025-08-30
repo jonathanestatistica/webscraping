@@ -61,12 +61,18 @@ def baixar_base_municipio():
 def enviar_para_google_sheets(csv_path: Path):
     try:
         logging.info("Lendo CSV para envio ao Sheets...")
-        df = pd.read_csv(csv_path, sep=';', encoding='latin1')  # latin1 para lidar com acentos
+        df = pd.read_csv(csv_path, sep=';', encoding='latin1')
 
         logging.info("Autenticando com Google Sheets usando segredo...")
-        json_str = os.environ["GCP_SHEETS_CREDENTIALS"]
+        json_str = os.environ.get("GCP_SHEETS_CREDENTIALS")
+        if not json_str:
+            raise EnvironmentError("❌ Variável de ambiente GCP_SHEETS_CREDENTIALS não encontrada.")
+
         service_account_info = json.loads(json_str)
-        creds = Credentials.from_service_account_info(service_account_info, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+        creds = Credentials.from_service_account_info(
+            service_account_info,
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
 
         gc = gspread.authorize(creds)
         sh = gc.open_by_key(sheet_id)
