@@ -4,20 +4,21 @@ from bs4 import BeautifulSoup
 import logging
 import pandas as pd
 import gspread
+import io
 from google.oauth2.service_account import Credentials
 
 # === CONFIGURAÇÃO ===
 BASE_URL = "https://www.ispdados.rj.gov.br/estatistica.html"
 data_dir = Path("data")
 logs_dir = Path("logs")
-json_keyfile = "calculo-p-valor-3190f56f75a4.json"  # nova chave
-sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"
+json_keyfile = "calculo-p-valor-3190f56f75a4.json"  # 🔑 chave atual
+sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"  # 🔗 ID da sua planilha
 
-# === CRIA PASTAS ===
+# === CRIA PASTAS SE NÃO EXISTIREM ===
 data_dir.mkdir(exist_ok=True)
 logs_dir.mkdir(exist_ok=True)
 
-# === LOG ===
+# === LOGGING ===
 log_file = logs_dir / "isp_bot.log"
 logging.basicConfig(
     filename=log_file,
@@ -49,23 +50,24 @@ def baixar_base_municipio():
 
                 logging.info(f"Arquivo atualizado e salvo em {destino.resolve()}")
 
-                # envia para Google Sheets
+                # Envia para Google Sheets
                 enviar_para_google_sheets(destino)
+
                 return destino
 
         raise RuntimeError("Não encontrei BaseMunicipioMensal.csv na página")
 
     except Exception as e:
         logging.error(f"Erro ao baixar: {e}")
+        print(f"❌ Falha ao baixar: {e}")
         raise
 
 def enviar_para_google_sheets(csv_path: Path):
     try:
         logging.info("Lendo CSV para envio ao Sheets...")
-        # detecta encoding automaticamente
         with open(csv_path, "rb") as f:
             content = f.read()
-        df = pd.read_csv(pd.compat.StringIO(content.decode("latin1")), sep=';')
+        df = pd.read_csv(io.StringIO(content.decode("latin1")), sep=';')
 
         logging.info("Autenticando com Google Sheets...")
         creds = Credentials.from_service_account_file(
