@@ -10,14 +10,14 @@ from google.oauth2.service_account import Credentials
 BASE_URL = "https://www.ispdados.rj.gov.br/estatistica.html"
 data_dir = Path("data")
 logs_dir = Path("logs")
-json_keyfile = "calculo-p-valor-24be73e741dd.json"  # chave correta
-sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"  # planilha
+json_keyfile = "calculo-p-valor-3190f56f75a4.json"  # nova chave
+sheet_id = "1IrSLMHgg2dNU4Py6X2RiwW7sfrcwPgLpQTxEK3ATTlo"
 
 # === CRIA PASTAS ===
 data_dir.mkdir(exist_ok=True)
 logs_dir.mkdir(exist_ok=True)
 
-# === LOGGING ===
+# === LOG ===
 log_file = logs_dir / "isp_bot.log"
 logging.basicConfig(
     filename=log_file,
@@ -47,20 +47,25 @@ def baixar_base_municipio():
                 destino = data_dir / "BaseMunicipioMensal.csv"
                 destino.write_bytes(r.content)
 
-                logging.info(f"Arquivo salvo em {destino.resolve()}")
+                logging.info(f"Arquivo atualizado e salvo em {destino.resolve()}")
+
+                # envia para Google Sheets
                 enviar_para_google_sheets(destino)
                 return destino
 
-        raise RuntimeError("CSV não encontrado na página.")
+        raise RuntimeError("Não encontrei BaseMunicipioMensal.csv na página")
 
     except Exception as e:
-        logging.error(f"Erro ao baixar CSV: {e}")
+        logging.error(f"Erro ao baixar: {e}")
         raise
 
 def enviar_para_google_sheets(csv_path: Path):
     try:
         logging.info("Lendo CSV para envio ao Sheets...")
-        df = pd.read_csv(csv_path, sep=';', encoding='latin1')  # usa latin1 para evitar erro com acentos
+        # detecta encoding automaticamente
+        with open(csv_path, "rb") as f:
+            content = f.read()
+        df = pd.read_csv(pd.compat.StringIO(content.decode("latin1")), sep=';')
 
         logging.info("Autenticando com Google Sheets...")
         creds = Credentials.from_service_account_file(
@@ -71,17 +76,17 @@ def enviar_para_google_sheets(csv_path: Path):
         sh = gc.open_by_key(sheet_id)
         worksheet = sh.sheet1
 
-        logging.info("Limpando planilha...")
+        logging.info("Limpando planilha antes de escrever...")
         worksheet.clear()
 
         logging.info("Enviando dados...")
-        worksheet.update([df.columns.values.tolist()] + df.values.tolist())
+        worksheet.update([df.columns.tolist()] + df.values.tolist())
 
-        logging.info("Planilha atualizada com sucesso.")
+        logging.info("✅ Planilha atualizada com sucesso.")
 
     except Exception as e:
         logging.error(f"Erro ao enviar para o Google Sheets: {e}")
-        print(f"❌ Falha no envio para o Sheets: {e}")
+        print(f"❌ Falha ao enviar para o Google Sheets: {e}")
 
 if __name__ == "__main__":
     baixar_base_municipio()
